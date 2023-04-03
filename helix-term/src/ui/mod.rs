@@ -350,7 +350,7 @@ pub mod completers {
             .collect()
     }
 
-    pub fn setting_value(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn setting_value(editor: &Editor, _input: &str) -> Vec<Completion> {
         let path = "line_number";
         let config = editor.config();
         // TODO error handling

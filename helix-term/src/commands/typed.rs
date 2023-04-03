@@ -5,7 +5,6 @@ use crate::job::Job;
 
 use super::*;
 
-use bevy_reflect::{GetPath, Reflect, Struct};
 use helix_core::{encoding, shellwords::Shellwords};
 use helix_view::document::DEFAULT_LANGUAGE_NAME;
 use helix_view::editor::{Action, CloseError, ConfigEvent};
