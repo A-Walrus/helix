@@ -1,3 +1,4 @@
+use bevy_reflect::{FromReflect, Reflect};
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -5,7 +6,7 @@ use std::{
     str::FromStr,
 };
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize, Reflect, FromReflect)]
 #[serde(rename_all = "lowercase")]
 /// UNSTABLE
 pub enum CursorKind {

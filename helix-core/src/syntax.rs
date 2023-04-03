@@ -25,6 +25,7 @@ use std::{
     sync::Arc,
 };
 
+use bevy_reflect::Reflect;
 use once_cell::sync::{Lazy, OnceCell};
 use serde::{Deserialize, Serialize};
 
@@ -290,7 +291,7 @@ pub struct IndentationConfiguration {
 }
 
 /// Configuration for auto pairs
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields, untagged)]
 pub enum AutoPairConfig {
     /// Enables or disables auto pairing. False means disabled. True means to use the default pairs.
@@ -551,7 +552,7 @@ impl LanguageConfiguration {
             .ok()
     }
 }
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 pub struct SoftWrap {
     /// Soft wrap lines that exceed viewport width. Default to off

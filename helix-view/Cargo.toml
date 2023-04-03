@@ -44,6 +44,7 @@ log = "~0.4"
 
 which = "4.4"
 parking_lot = "0.12.1"
+bevy_reflect = "0.10.1"
 
 
 [target.'cfg(windows)'.dependencies]

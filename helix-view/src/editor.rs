@@ -29,6 +29,7 @@ use std::{
     sync::Arc,
 };
 
+use bevy_reflect::{FromReflect, Reflect};
 use tokio::{
     sync::{
         mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
@@ -74,7 +75,7 @@ where
     )
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct GutterConfig {
     /// Gutter Layout
@@ -151,7 +152,7 @@ where
     deserializer.deserialize_any(GutterVisitor)
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct GutterLineNumbersConfig {
     /// Minimum number of characters to use for line number gutter. Defaults to 3.
@@ -164,7 +165,7 @@ impl Default for GutterLineNumbersConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct FilePickerConfig {
     /// IgnoreOptions
@@ -211,7 +212,7 @@ impl Default for FilePickerConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct Config {
     /// Padding to keep between the edge of the screen and the cursor when scrolling. Defaults to 5.
@@ -286,7 +287,7 @@ pub struct Config {
     pub workspace_lsp_roots: Vec<PathBuf>,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect, FromReflect)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 pub struct TerminalConfig {
     pub command: String,
@@ -339,7 +340,7 @@ pub fn get_terminal_provider() -> Option<TerminalConfig> {
     None
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(default, rename_all = "kebab-case", deny_unknown_fields)]
 pub struct LspConfig {
     /// Enables LSP
@@ -369,7 +370,7 @@ impl Default for LspConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct SearchConfig {
     /// Smart case: Case insensitive searching unless pattern contains upper case characters. Defaults to true.
@@ -378,7 +379,7 @@ pub struct SearchConfig {
     pub wrap_around: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct StatusLineConfig {
     pub left: Vec<StatusLineElement>,
@@ -407,7 +408,7 @@ impl Default for StatusLineConfig {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case", default, deny_unknown_fields)]
 pub struct ModeConfig {
     pub normal: String,
@@ -425,7 +426,7 @@ impl Default for ModeConfig {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect, FromReflect)]
 #[serde(rename_all = "kebab-case")]
 pub enum StatusLineElement {
     /// The editor mode (Normal, Insert, Visual/Selection)
@@ -485,7 +486,7 @@ pub enum StatusLineElement {
 
 // Cursor shape is read and used on every rendered frame and so needs
 // to be fast. Therefore we avoid a hashmap and use an enum indexed array.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Reflect, FromReflect)]
 pub struct CursorShapeConfig([CursorKind; 3]);
 
 impl CursorShapeConfig {
@@ -538,7 +539,7 @@ impl Default for CursorShapeConfig {
 }
 
 /// bufferline render modes
-#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case")]
 pub enum BufferLine {
     /// Don't render bufferline
@@ -550,7 +551,7 @@ pub enum BufferLine {
     Multiple,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(rename_all = "kebab-case")]
 pub enum LineNumber {
     /// Show absolute line number
@@ -573,7 +574,7 @@ impl std::str::FromStr for LineNumber {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect, FromReflect)]
 #[serde(rename_all = "kebab-case")]
 pub enum GutterType {
     /// Show diagnostics and other features like breakpoints
@@ -600,7 +601,7 @@ impl std::str::FromStr for GutterType {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(default)]
 pub struct WhitespaceConfig {
     pub render: WhitespaceRender,
@@ -616,7 +617,7 @@ impl Default for WhitespaceConfig {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(untagged, rename_all = "kebab-case")]
 pub enum WhitespaceRender {
     Basic(WhitespaceRenderValue),
@@ -629,7 +630,7 @@ pub enum WhitespaceRender {
     },
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect, FromReflect)]
 #[serde(rename_all = "kebab-case")]
 pub enum WhitespaceRenderValue {
     None,
@@ -673,7 +674,7 @@ impl WhitespaceRender {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(default)]
 pub struct WhitespaceCharacters {
     pub space: char,
@@ -695,7 +696,7 @@ impl Default for WhitespaceCharacters {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Reflect)]
 #[serde(default, rename_all = "kebab-case")]
 pub struct IndentGuidesConfig {
     pub render: bool,

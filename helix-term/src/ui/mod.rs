@@ -236,6 +236,7 @@ pub fn file_picker(root: PathBuf, config: &helix_view::editor::Config) -> FilePi
 
 pub mod completers {
     use crate::ui::prompt::Completion;
+    use bevy_reflect::GetPath;
     use fuzzy_matcher::skim::SkimMatcherV2 as Matcher;
     use fuzzy_matcher::FuzzyMatcher;
     use helix_view::document::SCRATCH_BUFFER_NAME;
@@ -347,6 +348,24 @@ pub mod completers {
             .into_iter()
             .map(|(name, _)| ((0..), name.into()))
             .collect()
+    }
+
+    pub fn setting_value(editor: &Editor, input: &str) -> Vec<Completion> {
+        let path = "line_number";
+        let config = editor.config();
+        // TODO error handling
+        let value = config.reflect_path(path).unwrap();
+        let options = match value.get_type_info() {
+            bevy_reflect::TypeInfo::Enum(e) => {
+                let variants = e.variant_names();
+                variants
+                    .iter()
+                    .map(|variant| ((0.., (*variant).to_lowercase().into())))
+                    .collect()
+            }
+            _ => Vec::new(),
+        };
+        options
     }
 
     pub fn filename(editor: &Editor, input: &str) -> Vec<Completion> {

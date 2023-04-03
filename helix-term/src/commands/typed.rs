@@ -5,6 +5,7 @@ use crate::job::Job;
 
 use super::*;
 
+use bevy_reflect::{GetPath, Reflect, Struct};
 use helix_core::{encoding, shellwords::Shellwords};
 use helix_view::document::DEFAULT_LANGUAGE_NAME;
 use helix_view::editor::{Action, CloseError, ConfigEvent};
@@ -2608,7 +2609,7 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
             doc: "Set a config option at runtime.\nFor example to disable smart case search, use `:set search.smart-case false`.",
             fun: set_option,
             // TODO: Add support for completion of the options value(s), when appropriate.
-            signature: CommandSignature::positional(&[completers::setting]),
+            signature: CommandSignature::positional(&[completers::setting,completers::setting_value]),
         },
         TypableCommand {
             name: "toggle-option",
