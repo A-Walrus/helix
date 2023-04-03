@@ -357,22 +357,24 @@ pub mod completers {
     pub fn setting_value(editor: &Editor, input: &[&str]) -> Vec<Completion> {
         let path = input[1].replace("-", "_");
         let config = editor.config();
-        // TODO error handling
-        let value = config.reflect_path(&path).unwrap();
-        let options = match value.get_type_info() {
-            bevy_reflect::TypeInfo::Enum(e) => {
-                let variants = e.variant_names();
-                variants
-                    .iter()
-                    .map(|variant| ((0.., (*variant).to_lowercase().into())))
-                    .collect()
-            }
-            bevy_reflect::TypeInfo::Value(v) if v.type_id() == TypeId::of::<bool>() => {
-                vec![(0.., "true".into()), (0.., "false".into())]
-            }
-            _ => Vec::new(),
-        };
-        options
+        if let Ok(value) = config.reflect_path(&path) {
+            let options = match value.get_type_info() {
+                bevy_reflect::TypeInfo::Enum(e) => {
+                    let variants = e.variant_names();
+                    variants
+                        .iter()
+                        .map(|variant| ((0.., (*variant).to_lowercase().into())))
+                        .collect()
+                }
+                bevy_reflect::TypeInfo::Value(v) if v.type_id() == TypeId::of::<bool>() => {
+                    vec![(0.., "true".into()), (0.., "false".into())]
+                }
+                _ => Vec::new(),
+            };
+            options
+        } else {
+            Vec::new()
+        }
     }
 
     pub fn filename(editor: &Editor, input: &[&str]) -> Vec<Completion> {
