@@ -1843,7 +1843,8 @@ fn searcher(cx: &mut Context, direction: Direction) {
         cx,
         "search:".into(),
         Some(reg),
-        move |_editor: &Editor, input: &str| {
+        move |_editor: &Editor, input: &[&str]| {
+            let input = *(input.last().unwrap());
             completions
                 .iter()
                 .filter(|comp| comp.starts_with(input))
@@ -2017,7 +2018,8 @@ fn global_search(cx: &mut Context) {
         cx,
         "global-search:".into(),
         Some(reg),
-        move |_editor: &Editor, input: &str| {
+        move |_editor: &Editor, input: &[&str]| {
+            let input = *(input.last().unwrap());
             completions
                 .iter()
                 .filter(|comp| comp.starts_with(input))

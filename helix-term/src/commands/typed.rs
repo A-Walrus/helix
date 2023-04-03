@@ -2608,7 +2608,7 @@ pub const TYPABLE_COMMAND_LIST: &[TypableCommand] = &[
             doc: "Set a config option at runtime.\nFor example to disable smart case search, use `:set search.smart-case false`.",
             fun: set_option,
             // TODO: Add support for completion of the options value(s), when appropriate.
-            signature: CommandSignature::positional(&[completers::setting,completers::setting_value]),
+            signature: CommandSignature::positional(&[completers::setting, completers::setting_value]),
         },
         TypableCommand {
             name: "toggle-option",
@@ -2740,7 +2740,8 @@ pub(super) fn command_mode(cx: &mut Context) {
     let mut prompt = Prompt::new(
         ":".into(),
         Some(':'),
-        |editor: &Editor, input: &str| {
+        |editor: &Editor, input: &[&str]| {
+            let input = *(input.last().unwrap());
             static FUZZY_MATCHER: Lazy<fuzzy_matcher::skim::SkimMatcherV2> =
                 Lazy::new(fuzzy_matcher::skim::SkimMatcherV2::default);
 
@@ -2781,7 +2782,7 @@ pub(super) fn command_mode(cx: &mut Context) {
                     .get(&words[0] as &str)
                     .map(|tc| tc.completer_for_argument_number(argument_number))
                 {
-                    completer(editor, part)
+                    completer(editor, shellwords.parts())
                         .into_iter()
                         .map(|(range, file)| {
                             let file = shellwords::escape(file);

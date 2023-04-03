@@ -16,7 +16,7 @@ use helix_view::{
 
 type PromptCharHandler = Box<dyn Fn(&mut Prompt, char, &Context)>;
 pub type Completion = (RangeFrom<usize>, Cow<'static, str>);
-type CompletionFn = Box<dyn FnMut(&Editor, &str) -> Vec<Completion>>;
+type CompletionFn = Box<dyn FnMut(&Editor, &[&str]) -> Vec<Completion>>;
 type CallbackFn = Box<dyn FnMut(&mut Context, &str, PromptEvent)>;
 pub type DocFn = Box<dyn Fn(&str) -> Option<Cow<str>>>;
 
@@ -68,7 +68,7 @@ impl Prompt {
     pub fn new(
         prompt: Cow<'static, str>,
         history_register: Option<char>,
-        completion_fn: impl FnMut(&Editor, &str) -> Vec<Completion> + 'static,
+        completion_fn: impl FnMut(&Editor, &[&str]) -> Vec<Completion> + 'static,
         callback_fn: impl FnMut(&mut Context, &str, PromptEvent) + 'static,
     ) -> Self {
         Self {
@@ -100,7 +100,7 @@ impl Prompt {
 
     pub fn recalculate_completion(&mut self, editor: &Editor) {
         self.exit_selection();
-        self.completion = (self.completion_fn)(editor, &self.line);
+        self.completion = (self.completion_fn)(editor, &[&self.line]);
     }
 
     /// Compute the cursor position after applying movement

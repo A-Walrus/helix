@@ -37,7 +37,7 @@ pub fn prompt(
     cx: &mut crate::commands::Context,
     prompt: std::borrow::Cow<'static, str>,
     history_register: Option<char>,
-    completion_fn: impl FnMut(&Editor, &str) -> Vec<prompt::Completion> + 'static,
+    completion_fn: impl FnMut(&Editor, &[&str]) -> Vec<prompt::Completion> + 'static,
     callback_fn: impl FnMut(&mut crate::compositor::Context, &str, PromptEvent) + 'static,
 ) {
     let mut prompt = Prompt::new(prompt, history_register, completion_fn, callback_fn);
@@ -51,7 +51,7 @@ pub fn prompt_with_input(
     prompt: std::borrow::Cow<'static, str>,
     input: String,
     history_register: Option<char>,
-    completion_fn: impl FnMut(&Editor, &str) -> Vec<prompt::Completion> + 'static,
+    completion_fn: impl FnMut(&Editor, &[&str]) -> Vec<prompt::Completion> + 'static,
     callback_fn: impl FnMut(&mut crate::compositor::Context, &str, PromptEvent) + 'static,
 ) {
     let prompt = Prompt::new(prompt, history_register, completion_fn, callback_fn)
@@ -63,7 +63,7 @@ pub fn regex_prompt(
     cx: &mut crate::commands::Context,
     prompt: std::borrow::Cow<'static, str>,
     history_register: Option<char>,
-    completion_fn: impl FnMut(&Editor, &str) -> Vec<prompt::Completion> + 'static,
+    completion_fn: impl FnMut(&Editor, &[&str]) -> Vec<prompt::Completion> + 'static,
     fun: impl Fn(&mut Editor, Regex, PromptEvent) + 'static,
 ) {
     let (view, doc) = current!(cx.editor);
@@ -243,16 +243,18 @@ pub mod completers {
     use helix_view::theme;
     use helix_view::{editor::Config, Editor};
     use once_cell::sync::Lazy;
+    use std::any::TypeId;
     use std::borrow::Cow;
     use std::cmp::Reverse;
 
-    pub type Completer = fn(&Editor, &str) -> Vec<Completion>;
+    pub type Completer = fn(&Editor, &[&str]) -> Vec<Completion>;
 
-    pub fn none(_editor: &Editor, _input: &str) -> Vec<Completion> {
+    pub fn none(_editor: &Editor, _input: &[&str]) -> Vec<Completion> {
         Vec::new()
     }
 
-    pub fn buffer(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn buffer(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         let mut names: Vec<_> = editor
             .documents
             .values()
@@ -280,7 +282,8 @@ pub mod completers {
         names
     }
 
-    pub fn theme(_editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn theme(_editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         let mut names = theme::Loader::read_names(&helix_loader::config_dir().join("themes"));
         for rt_dir in helix_loader::runtime_dirs() {
             names.extend(theme::Loader::read_names(&rt_dir.join("themes")));
@@ -328,7 +331,8 @@ pub mod completers {
         }
     }
 
-    pub fn setting(_editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn setting(_editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         static KEYS: Lazy<Vec<String>> = Lazy::new(|| {
             let mut keys = Vec::new();
             let json = serde_json::json!(Config::default());
@@ -350,11 +354,11 @@ pub mod completers {
             .collect()
     }
 
-    pub fn setting_value(editor: &Editor, _input: &str) -> Vec<Completion> {
-        let path = "line_number";
+    pub fn setting_value(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let path = input[1].replace("-", "_");
         let config = editor.config();
         // TODO error handling
-        let value = config.reflect_path(path).unwrap();
+        let value = config.reflect_path(&path).unwrap();
         let options = match value.get_type_info() {
             bevy_reflect::TypeInfo::Enum(e) => {
                 let variants = e.variant_names();
@@ -363,12 +367,16 @@ pub mod completers {
                     .map(|variant| ((0.., (*variant).to_lowercase().into())))
                     .collect()
             }
+            bevy_reflect::TypeInfo::Value(v) if v.type_id() == TypeId::of::<bool>() => {
+                vec![(0.., "true".into()), (0.., "false".into())]
+            }
             _ => Vec::new(),
         };
         options
     }
 
-    pub fn filename(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn filename(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         filename_impl(editor, input, |entry| {
             let is_dir = entry.file_type().map_or(false, |entry| entry.is_dir());
 
@@ -380,7 +388,8 @@ pub mod completers {
         })
     }
 
-    pub fn language(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn language(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         let matcher = Matcher::default();
 
         let text: String = "text".into();
@@ -409,7 +418,8 @@ pub mod completers {
             .collect()
     }
 
-    pub fn lsp_workspace_command(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn lsp_workspace_command(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         let matcher = Matcher::default();
 
         let (_, doc) = current_ref!(editor);
@@ -448,7 +458,8 @@ pub mod completers {
             .collect()
     }
 
-    pub fn directory(editor: &Editor, input: &str) -> Vec<Completion> {
+    pub fn directory(editor: &Editor, input: &[&str]) -> Vec<Completion> {
+        let input = *(input.last().unwrap());
         filename_impl(editor, input, |entry| {
             let is_dir = entry.file_type().map_or(false, |entry| entry.is_dir());
 
