@@ -236,7 +236,7 @@ pub fn file_picker(root: PathBuf, config: &helix_view::editor::Config) -> FilePi
 
 pub mod completers {
     use crate::ui::prompt::Completion;
-    use bevy_reflect::GetPath;
+    use bevy_reflect::{GetPath, VariantInfo};
     use fuzzy_matcher::skim::SkimMatcherV2 as Matcher;
     use fuzzy_matcher::FuzzyMatcher;
     use helix_view::document::SCRATCH_BUFFER_NAME;
@@ -360,11 +360,23 @@ pub mod completers {
         if let Ok(value) = config.reflect_path(&path) {
             let options = match value.get_type_info() {
                 bevy_reflect::TypeInfo::Enum(e) => {
-                    let variants = e.variant_names();
-                    variants
-                        .iter()
-                        .map(|variant| ((0.., (*variant).to_lowercase().into())))
-                        .collect()
+                    if e.name() == "Option" {
+                        // Unwrap shouldn't fail because `Option` has `Some` variant
+                        let some_index = e.variant("Some").unwrap();
+                        if let VariantInfo::Tuple(t) = some_index {
+                            // Unwrap shouldn't fail because Some has 1 field
+                            let inner = t.field_at(0).unwrap();
+                            Vec::new()
+                        } else {
+                            unreachable!("Some is a tuple variant")
+                        }
+                    } else {
+                        let variants = e.variant_names();
+                        variants
+                            .iter()
+                            .map(|variant| ((0.., (*variant).to_lowercase().into())))
+                            .collect()
+                    }
                 }
                 bevy_reflect::TypeInfo::Value(v) if v.type_id() == TypeId::of::<bool>() => {
                     vec![(0.., "true".into()), (0.., "false".into())]
