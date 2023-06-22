@@ -1547,7 +1547,11 @@ pub enum Error {
 /// Represents a single step in rendering a syntax-highlighted document.
 #[derive(Copy, Clone, Debug)]
 pub enum HighlightEvent {
-    Source { start: usize, end: usize },
+    /// Start and end of text in bytes
+    Source {
+        start: usize,
+        end: usize,
+    },
     HighlightStart(Highlight),
     HighlightEnd,
 }

@@ -12,9 +12,7 @@ use crate::{
 
 use helix_core::{
     diagnostic::NumberOrString,
-    graphemes::{
-        ensure_grapheme_boundary_next_byte, next_grapheme_boundary, prev_grapheme_boundary,
-    },
+    graphemes::{next_grapheme_boundary, prev_grapheme_boundary},
     movement::Direction,
     syntax::{self, HighlightEvent},
     text_annotations::TextAnnotations,
@@ -302,26 +300,13 @@ impl EditorView {
                 let iter = syntax
                     // TODO: range doesn't actually restrict source, just highlight range
                     .highlight_iter(text.slice(..), Some(range), None)
-                    .map(|event| event.unwrap())
-                    .map(move |event| match event {
-                        // TODO: use byte slices directly
-                        // convert byte offsets to char offset
-                        HighlightEvent::Source { start, end } => {
-                            let start =
-                                text.byte_to_char(ensure_grapheme_boundary_next_byte(text, start));
-                            let end =
-                                text.byte_to_char(ensure_grapheme_boundary_next_byte(text, end));
-                            HighlightEvent::Source { start, end }
-                        }
-                        event => event,
-                    });
-
+                    .map(|event| event.unwrap());
                 Box::new(iter)
             }
             None => Box::new(
                 [HighlightEvent::Source {
-                    start: text.byte_to_char(range.start),
-                    end: text.byte_to_char(range.end),
+                    start: range.start,
+                    end: range.end,
                 }]
                 .into_iter(),
             ),
@@ -485,7 +470,16 @@ impl EditorView {
                 spans.push((selection_scope, selection_start..range.anchor));
             }
         }
-
+        // convert from char to byte indexing
+        for span in spans.iter_mut() {
+            let range = &mut span.1;
+            range.start = text.char_to_byte(range.start);
+            range.end = if range.end > text.len_chars() {
+                text.len_bytes() + 1
+            } else {
+                text.char_to_byte(range.end)
+            };
+        }
         spans
     }
 
@@ -504,6 +498,7 @@ impl EditorView {
             if let Some(pos) =
                 match_brackets::find_matching_bracket(syntax, doc.text().slice(..), pos)
             {
+                let pos = doc.text().char_to_byte(pos);
                 // ensure col is on screen
                 if let Some(highlight) = theme.find_scope_index_exact("ui.cursor.match") {
                     return vec![(highlight, pos..pos + 1)];

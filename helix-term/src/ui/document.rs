@@ -34,7 +34,7 @@ impl<F: FnMut(&mut TextRenderer, LinePos)> LineDecoration for F {
 
 /// A wrapper around a HighlightIterator
 /// that merges the layered highlights to create the final text style
-/// and yields the active text style and the char_idx where the active
+/// and yields the active text style and the byte_idx where the active
 /// style will have to be recomputed.
 struct StyleIter<'a, H: Iterator<Item = HighlightEvent>> {
     text_style: Style,
@@ -176,6 +176,8 @@ pub fn render_text<'t>(
     );
     row_off += offset.vertical_offset;
 
+    let mut byte_pos = text.char_to_byte(char_pos);
+
     let (mut formatter, mut first_visible_char_idx) =
         DocumentFormatter::new_at_prev_checkpoint(text, text_fmt, text_annotations, offset.anchor);
     let mut styles = StyleIter {
@@ -221,7 +223,7 @@ pub fn render_text<'t>(
 
         // skip any graphemes on visual lines before the block start
         if pos.row < row_off {
-            if char_pos >= style_span.1 {
+            if byte_pos >= style_span.1 {
                 style_span = if let Some(style_span) = styles.next() {
                     style_span
                 } else {
@@ -229,6 +231,7 @@ pub fn render_text<'t>(
                 }
             }
             char_pos += grapheme.doc_chars();
+            byte_pos += grapheme.doc_bytes();
             first_visible_char_idx = char_pos + 1;
             continue;
         }
@@ -260,10 +263,11 @@ pub fn render_text<'t>(
         }
 
         // acquire the correct grapheme style
-        if char_pos >= style_span.1 {
+        if byte_pos >= style_span.1 {
             style_span = styles.next().unwrap_or((Style::default(), usize::MAX));
         }
         char_pos += grapheme.doc_chars();
+        byte_pos += grapheme.doc_bytes();
 
         // check if any positions translated on the fly (like cursor) has been reached
         translate_positions(

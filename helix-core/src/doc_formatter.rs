@@ -67,6 +67,17 @@ impl<'a> FormattedGrapheme<'a> {
         }
     }
 
+    pub fn doc_bytes(&self) -> usize {
+        match self.source {
+            GraphemeSource::Document { .. } => match &self.grapheme {
+                Grapheme::Newline => 1,
+                Grapheme::Tab { .. } => 1,
+                Grapheme::Other { g } => g.len(),
+            },
+            GraphemeSource::VirtualText { .. } => 0,
+        }
+    }
+
     pub fn doc_chars(&self) -> usize {
         match self.source {
             GraphemeSource::Document { codepoints } => codepoints as usize,
